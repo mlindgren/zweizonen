@@ -1,0 +1,62 @@
+<strings>
+    <string id="AppName">Quadrant Arcs</string>
+    <string id="SettingsTitle">Settings</string>
+
+    <string id="HourColorTitle">Hour digit color</string>
+    <string id="ColorAmber">Amber</string>
+    <string id="ColorWhite">White</string>
+    <string id="ColorRed">Red</string>
+    <string id="ColorOrange">Orange</string>
+    <string id="ColorYellow">Yellow</string>
+    <string id="ColorGreen">Green</string>
+    <string id="ColorCyan">Cyan</string>
+    <string id="ColorBlue">Blue</string>
+    <string id="ColorPurple">Purple</string>
+    <string id="ColorPink">Pink</string>
+
+    <string id="ArcTopLeftTitle">Top-left arc</string>
+    <string id="ArcTopRightTitle">Top-right arc</string>
+    <string id="ArcBottomLeftTitle">Bottom-left arc</string>
+    <string id="ArcBottomRightTitle">Bottom-right arc</string>
+    <string id="MetricNone">None</string>
+    <string id="MetricBodyBattery">Body Battery</string>
+    <string id="MetricWatchBattery">Watch battery</string>
+    <string id="MetricSteps">Step goal</string>
+    <string id="MetricRecovery">Recovery time</string>
+    <string id="MetricIntensity">Weekly intensity minutes</string>
+    <string id="MetricFloors">Floors goal</string>
+
+    <string id="AltZoneTitle">Second time zone</string>
+    <string id="City0">UTC</string>
+    <string id="City1">London</string>
+    <string id="City2">Paris</string>
+    <string id="City3">Berlin</string>
+    <string id="City4">Athens</string>
+    <string id="City5">Cairo</string>
+    <string id="City6">Johannesburg</string>
+    <string id="City7">Nairobi</string>
+    <string id="City8">Istanbul</string>
+    <string id="City9">Moscow</string>
+    <string id="City10">Dubai</string>
+    <string id="City11">Delhi</string>
+    <string id="City12">Bangkok</string>
+    <string id="City13">Singapore</string>
+    <string id="City14">Hong Kong</string>
+    <string id="City15">Shanghai</string>
+    <string id="City16">Seoul</string>
+    <string id="City17">Tokyo</string>
+    <string id="City18">Sydney</string>
+    <string id="City19">Auckland</string>
+    <string id="City20">Honolulu</string>
+    <string id="City21">Anchorage</string>
+    <string id="City22">Los Angeles</string>
+    <string id="City23">Seattle</string>
+    <string id="City24">Phoenix</string>
+    <string id="City25">Denver</string>
+    <string id="City26">Mexico City</string>
+    <string id="City27">Chicago</string>
+    <string id="City28">New York</string>
+    <string id="City29">Toronto</string>
+    <string id="City30">Sao Paulo</string>
+    <string id="City31">Buenos Aires</string>
+</strings>

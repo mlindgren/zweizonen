@@ -1,0 +1,96 @@
+<settings>
+    <setting propertyKey="@Properties.HourColor" title="@Strings.HourColorTitle">
+        <settingConfig type="list">
+            <listEntry value="16755200">@Strings.ColorAmber</listEntry>
+            <listEntry value="16777215">@Strings.ColorWhite</listEntry>
+            <listEntry value="16724016">@Strings.ColorRed</listEntry>
+            <listEntry value="16742144">@Strings.ColorOrange</listEntry>
+            <listEntry value="16772608">@Strings.ColorYellow</listEntry>
+            <listEntry value="3407718">@Strings.ColorGreen</listEntry>
+            <listEntry value="56831">@Strings.ColorCyan</listEntry>
+            <listEntry value="3377407">@Strings.ColorBlue</listEntry>
+            <listEntry value="11167487">@Strings.ColorPurple</listEntry>
+            <listEntry value="16733610">@Strings.ColorPink</listEntry>
+        </settingConfig>
+    </setting>
+    <setting propertyKey="@Properties.ArcTopLeft" title="@Strings.ArcTopLeftTitle">
+        <settingConfig type="list">
+            <listEntry value="0">@Strings.MetricNone</listEntry>
+            <listEntry value="1">@Strings.MetricBodyBattery</listEntry>
+            <listEntry value="2">@Strings.MetricWatchBattery</listEntry>
+            <listEntry value="3">@Strings.MetricSteps</listEntry>
+            <listEntry value="4">@Strings.MetricRecovery</listEntry>
+            <listEntry value="5">@Strings.MetricIntensity</listEntry>
+            <listEntry value="6">@Strings.MetricFloors</listEntry>
+        </settingConfig>
+    </setting>
+    <setting propertyKey="@Properties.ArcTopRight" title="@Strings.ArcTopRightTitle">
+        <settingConfig type="list">
+            <listEntry value="0">@Strings.MetricNone</listEntry>
+            <listEntry value="1">@Strings.MetricBodyBattery</listEntry>
+            <listEntry value="2">@Strings.MetricWatchBattery</listEntry>
+            <listEntry value="3">@Strings.MetricSteps</listEntry>
+            <listEntry value="4">@Strings.MetricRecovery</listEntry>
+            <listEntry value="5">@Strings.MetricIntensity</listEntry>
+            <listEntry value="6">@Strings.MetricFloors</listEntry>
+        </settingConfig>
+    </setting>
+    <setting propertyKey="@Properties.ArcBottomLeft" title="@Strings.ArcBottomLeftTitle">
+        <settingConfig type="list">
+            <listEntry value="0">@Strings.MetricNone</listEntry>
+            <listEntry value="1">@Strings.MetricBodyBattery</listEntry>
+            <listEntry value="2">@Strings.MetricWatchBattery</listEntry>
+            <listEntry value="3">@Strings.MetricSteps</listEntry>
+            <listEntry value="4">@Strings.MetricRecovery</listEntry>
+            <listEntry value="5">@Strings.MetricIntensity</listEntry>
+            <listEntry value="6">@Strings.MetricFloors</listEntry>
+        </settingConfig>
+    </setting>
+    <setting propertyKey="@Properties.ArcBottomRight" title="@Strings.ArcBottomRightTitle">
+        <settingConfig type="list">
+            <listEntry value="0">@Strings.MetricNone</listEntry>
+            <listEntry value="1">@Strings.MetricBodyBattery</listEntry>
+            <listEntry value="2">@Strings.MetricWatchBattery</listEntry>
+            <listEntry value="3">@Strings.MetricSteps</listEntry>
+            <listEntry value="4">@Strings.MetricRecovery</listEntry>
+            <listEntry value="5">@Strings.MetricIntensity</listEntry>
+            <listEntry value="6">@Strings.MetricFloors</listEntry>
+        </settingConfig>
+    </setting>
+    <setting propertyKey="@Properties.AltZone" title="@Strings.AltZoneTitle">
+        <settingConfig type="list">
+            <listEntry value="0">@Strings.City0</listEntry>
+            <listEntry value="1">@Strings.City1</listEntry>
+            <listEntry value="2">@Strings.City2</listEntry>
+            <listEntry value="3">@Strings.City3</listEntry>
+            <listEntry value="4">@Strings.City4</listEntry>
+            <listEntry value="5">@Strings.City5</listEntry>
+            <listEntry value="6">@Strings.City6</listEntry>
+            <listEntry value="7">@Strings.City7</listEntry>
+            <listEntry value="8">@Strings.City8</listEntry>
+            <listEntry value="9">@Strings.City9</listEntry>
+            <listEntry value="10">@Strings.City10</listEntry>
+            <listEntry value="11">@Strings.City11</listEntry>
+            <listEntry value="12">@Strings.City12</listEntry>
+            <listEntry value="13">@Strings.City13</listEntry>
+            <listEntry value="14">@Strings.City14</listEntry>
+            <listEntry value="15">@Strings.City15</listEntry>
+            <listEntry value="16">@Strings.City16</listEntry>
+            <listEntry value="17">@Strings.City17</listEntry>
+            <listEntry value="18">@Strings.City18</listEntry>
+            <listEntry value="19">@Strings.City19</listEntry>
+            <listEntry value="20">@Strings.City20</listEntry>
+            <listEntry value="21">@Strings.City21</listEntry>
+            <listEntry value="22">@Strings.City22</listEntry>
+            <listEntry value="23">@Strings.City23</listEntry>
+            <listEntry value="24">@Strings.City24</listEntry>
+            <listEntry value="25">@Strings.City25</listEntry>
+            <listEntry value="26">@Strings.City26</listEntry>
+            <listEntry value="27">@Strings.City27</listEntry>
+            <listEntry value="28">@Strings.City28</listEntry>
+            <listEntry value="29">@Strings.City29</listEntry>
+            <listEntry value="30">@Strings.City30</listEntry>
+            <listEntry value="31">@Strings.City31</listEntry>
+        </settingConfig>
+    </setting>
+</settings>

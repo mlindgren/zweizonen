@@ -1,0 +1,8 @@
+<properties>
+    <property id="HourColor" type="number">16755200</property>
+    <property id="ArcTopLeft" type="number">1</property>
+    <property id="ArcTopRight" type="number">2</property>
+    <property id="ArcBottomLeft" type="number">3</property>
+    <property id="ArcBottomRight" type="number">4</property>
+    <property id="AltZone" type="number">0</property>
+</properties>

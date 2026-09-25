@@ -1,0 +1,14 @@
+# Build output
+bin/
+
+# Signing keys never belong in the repo (the developer key lives in ~/.garmin)
+*.pem
+*.der
+
+# Local simulator screenshots and helper scripts
+.shots/
+
+# Editor / OS clutter
+.vscode/
+Thumbs.db
+desktop.ini

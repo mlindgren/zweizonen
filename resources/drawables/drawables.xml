@@ -1,0 +1,28 @@
+<drawables>
+    <bitmap id="LauncherIcon" filename="launcher_icon.svg" scaleX="65" scaleY="65"/>
+
+    <!-- Weather Icons by Erik Flowers, SIL OFL 1.1 (see THIRD-PARTY-NOTICES.txt) -->
+    <bitmap id="WiDaySunny" filename="icons/wi-day-sunny.svg" scaleX="52" scaleY="52"/>
+    <bitmap id="WiNightClear" filename="icons/wi-night-clear.svg" scaleX="52" scaleY="52"/>
+    <bitmap id="WiDayCloudy" filename="icons/wi-day-cloudy.svg" scaleX="52" scaleY="52"/>
+    <bitmap id="WiNightCloudy" filename="icons/wi-night-alt-cloudy.svg" scaleX="52" scaleY="52"/>
+    <bitmap id="WiCloudy" filename="icons/wi-cloudy.svg" scaleX="52" scaleY="52"/>
+    <bitmap id="WiRain" filename="icons/wi-rain.svg" scaleX="52" scaleY="52"/>
+    <bitmap id="WiShowers" filename="icons/wi-showers.svg" scaleX="52" scaleY="52"/>
+    <bitmap id="WiThunderstorm" filename="icons/wi-thunderstorm.svg" scaleX="52" scaleY="52"/>
+    <bitmap id="WiSnow" filename="icons/wi-snow.svg" scaleX="52" scaleY="52"/>
+    <bitmap id="WiSleet" filename="icons/wi-sleet.svg" scaleX="52" scaleY="52"/>
+    <bitmap id="WiFog" filename="icons/wi-fog.svg" scaleX="52" scaleY="52"/>
+    <bitmap id="WiWindy" filename="icons/wi-windy.svg" scaleX="52" scaleY="52"/>
+    <bitmap id="WiNa" filename="icons/wi-na.svg" scaleX="52" scaleY="52"/>
+    <bitmap id="WiSunrise" filename="icons/wi-sunrise.svg" scaleX="56" scaleY="56"/>
+    <bitmap id="WiSunset" filename="icons/wi-sunset.svg" scaleX="56" scaleY="56"/>
+
+    <!-- Material Symbols by Google, Apache 2.0 (see THIRD-PARTY-NOTICES.txt) -->
+    <bitmap id="ArcBodyBattery" filename="icons/arc-body-battery.svg" scaleX="30" scaleY="30"/>
+    <bitmap id="ArcWatchBattery" filename="icons/arc-watch-battery.svg" scaleX="30" scaleY="30"/>
+    <bitmap id="ArcSteps" filename="icons/arc-steps.svg" scaleX="30" scaleY="30"/>
+    <bitmap id="ArcRecovery" filename="icons/arc-recovery.svg" scaleX="30" scaleY="30"/>
+    <bitmap id="ArcIntensity" filename="icons/arc-intensity.svg" scaleX="30" scaleY="30"/>
+    <bitmap id="ArcFloors" filename="icons/arc-floors.svg" scaleX="30" scaleY="30"/>
+</drawables>
