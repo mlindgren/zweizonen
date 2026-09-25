@@ -16,17 +16,18 @@ class WatchFaceView extends WatchUi.WatchFace {
 
     private const DESIGN_SIZE = 454.0;
 
-    // Row centers (design px)
-    private const WEATHER_Y = 58;
-    private const DATE_Y = 90;
-    private const HOUR_Y = 161;
-    private const MINUTE_Y = 274;
-    private const ALT_Y = 356;
-    private const SUN_Y = 389;
+    // Row centers (design px). The hour and minute digits (0.625 x TIME_SIZE tall)
+    // are stacked with a 14 px gap.
+    private const WEATHER_Y = 54;
+    private const DATE_Y = 86;
+    private const HOUR_Y = 158;
+    private const MINUTE_Y = 266;
+    private const ALT_Y = 348;
+    private const SUN_Y = 390;
 
     // Gauges: centers (design px) in the order TL, TR, BL, BR; ring radius and stroke
-    private const GAUGE_X = [98, 356, 98, 356];
-    private const GAUGE_Y = [172, 172, 284, 284];
+    private const GAUGE_X = [84, 370, 84, 370];
+    private const GAUGE_Y = [162, 162, 270, 270];
     private const GAUGE_RADIUS = 33;
     private const GAUGE_STROKE = 5;
 
@@ -38,17 +39,18 @@ class WatchFaceView extends WatchUi.WatchFace {
     private const SECONDS_STROKE = 4;
 
     // Font sizes (design px)
-    private const TIME_SIZE = 122;
-    private const SECONDS_SIZE = 28;
-    private const DATE_SIZE = 22;
-    private const WEATHER_SIZE = 24;
-    private const ALT_SIZE = 30;
-    private const LABEL_SIZE = 15;
-    private const SUN_SIZE = 22;
-    private const GAUGE_SIZE = 20;
+    private const TIME_SIZE = 150;
+    private const SECONDS_SIZE = 34;
+    private const DATE_SIZE = 25;
+    private const WEATHER_SIZE = 27;
+    private const ALT_SIZE = 42;
+    private const LABEL_SIZE = 18;
+    private const SUN_SIZE = 25;
+    private const GAUGE_SIZE = 23;
 
-    // Roboto Condensed digits are about 0.71 of the font size tall
-    private const DIGIT_HEIGHT = 0.71;
+    // Roboto Condensed digits (and capitals) are 0.625 of the font size tall,
+    // measured in the simulator; their bottom sits on the baseline
+    private const DIGIT_HEIGHT = 0.625;
 
     // Band height (px) for gradient text; smaller is smoother but slower to render
     private const GRADIENT_BAND = 2;
@@ -58,6 +60,7 @@ class WatchFaceView extends WatchUi.WatchFace {
     private const SECONDARY = 0xC9CCD0;
     private const DATE_COLOR = 0xAEB3B8;
     private const DIM = 0x6B7177;
+    private const SUN_COLOR = 0xFF9A1F;
     private const AOD_TEXT = 0x9A9A9A;
     private const GAUGE_TRACK = 0x1F2327;
     private const TICK = 0x2A2E32;
@@ -325,11 +328,14 @@ class WatchFaceView extends WatchUi.WatchFace {
     }
 
     private function hourText(hour as Number) as String {
-        if (System.getDeviceSettings().is24Hour) {
-            return hour.format("%02d");
+        if (!System.getDeviceSettings().is24Hour) {
+            hour = hour % 12;
+            if (hour == 0) {
+                hour = 12;
+            }
         }
-        hour = hour % 12;
-        return (hour == 0 ? 12 : hour).toString();
+        // Two digits in 12-hour mode too, so the stacked hour lines up with the minutes
+        return hour.format("%02d");
     }
 
     //! "HH:MM", with a trailing "a"/"p" in 12-hour mode when withSuffix is set.
@@ -350,9 +356,25 @@ class WatchFaceView extends WatchUi.WatchFace {
 
     // ---- Drawing ----------------------------------------------------------
 
-    //! Half the visible digit (or cap) height of a font
-    private function digitHalf(font as FontType) as Number {
-        return (fontSize(font) * DIGIT_HEIGHT / 2).toNumber();
+    //! Visible digit (or capital) height of a font
+    private function capHeight(font as FontType) as Number {
+        return (fontSize(font) * DIGIT_HEIGHT).toNumber();
+    }
+
+    //! Offset from the y of vertically centered text to its baseline
+    private function baseline(font as FontType) as Number {
+        return (Graphics.getFontAscent(font) - Graphics.getFontDescent(font)) / 2;
+    }
+
+    //! y for a small tag (drawn vertically centered) whose bottom lines up with
+    //! the bottom of the digits of text drawn at y
+    private function bottomAlignedY(y as Number, font as FontType, tagFont as FontType) as Number {
+        return y + baseline(font) - baseline(tagFont);
+    }
+
+    //! y for a small tag whose top lines up with the top of the digits of text drawn at y
+    private function topAlignedY(y as Number, font as FontType, tagFont as FontType) as Number {
+        return bottomAlignedY(y, font, tagFont) - capHeight(font) + capHeight(tagFont);
     }
 
     //! Nominal pixel size of a font (ascent + descent)
@@ -371,7 +393,7 @@ class WatchFaceView extends WatchUi.WatchFace {
         var suffix = amPm(clock.hour);
         if (suffix != null) {
             dc.setColor(DIM, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(hourRight + px(6), hourY - digitHalf(_timeFont) + digitHalf(_secFont), _secFont, suffix, flags);
+            dc.drawText(hourRight + px(6), topAlignedY(hourY, _timeFont, _secFont), _secFont, suffix, flags);
         }
 
         // Minute line, with seconds at the bottom right while awake
@@ -382,30 +404,37 @@ class WatchFaceView extends WatchUi.WatchFace {
         if (_isAwake) {
             var minuteRight = _cx + dx + dc.getTextWidthInPixels(minutes, _timeFont) / 2;
             dc.setColor(DIM, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(minuteRight + px(6), minuteY + digitHalf(_timeFont) - digitHalf(_secFont), _secFont,
+            dc.drawText(minuteRight + px(6), bottomAlignedY(minuteY, _timeFont, _secFont), _secFont,
                 clock.sec.format("%02d"), flags);
         }
 
-        // Second time zone: digits centered, zone label (and AM/PM) to the right on the same baseline
+        // Second time zone: digits centered; to their right the zone label sits on
+        // the baseline, with AM/PM stacked above it (top-aligned with the digits)
         var alt = Gregorian.utcInfo(Time.now().add(new Time.Duration(_altOffset)), Time.FORMAT_SHORT);
         var altHour = alt.hour as Number;
         var altText = formatClock(altHour, alt.min as Number, false);
-        var label = AltTime.label(_altZone);
-        var altSuffix = amPm(altHour);
-        if (altSuffix != null) {
-            label = altSuffix + " " + label;
-        }
         var altY = sy(ALT_Y) + dy;
         var altRight = _cx + dx + dc.getTextWidthInPixels(altText, _altFont) / 2;
         dc.setColor(_isAwake ? SECONDARY : AOD_TEXT, Graphics.COLOR_TRANSPARENT);
         dc.drawText(_cx + dx, altY, _altFont, altText, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-        drawSpaced(dc, label, _labelFont, DIM, altRight + px(5), altY + digitHalf(_altFont) - digitHalf(_labelFont),
+        var tagX = altRight + px(5);
+        drawSpaced(dc, AltTime.label(_altZone), _labelFont, DIM, tagX, bottomAlignedY(altY, _altFont, _labelFont),
             px(2), true);
+        var altSuffix = amPm(altHour);
+        if (altSuffix != null) {
+            drawSpaced(dc, altSuffix, _labelFont, DIM, tagX, topAlignedY(altY, _altFont, _labelFont), px(2), true);
+        }
     }
 
     //! Draws the hour digits centered at (x, y) in the configured color or
-    //! gradient. Returns the right edge of the digits.
+    //! gradient (solid in always-on). Returns the right edge of the digits.
     private function drawHour(dc as Dc, text as String, x as Number, y as Number) as Number {
+        // Always-on draws the hour in the solid accent color, without the gradient
+        if (!_isAwake) {
+            dc.setColor(Settings.accentColor(_hourColor), Graphics.COLOR_TRANSPARENT);
+            dc.drawText(x, y, _timeFont, text, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            return x + dc.getTextWidthInPixels(text, _timeFont) / 2;
+        }
         var key = text + "/" + _hourColor;
         if (!key.equals(_hourBitmapKey)) {
             _hourBitmap = renderGradientText(dc, text, _timeFont, Settings.hourColors(_hourColor));
@@ -438,10 +467,10 @@ class WatchFaceView extends WatchUi.WatchFace {
             return bmp;
         }
         // The gradient spans the visible digits, not the whole font box
-        var half = digitHalf(font);
-        var top = h / 2 - half;
+        var cap = capHeight(font);
+        var top = h / 2 + baseline(font) - cap;
         for (var y = 0; y < h; y += GRADIENT_BAND) {
-            var t = (y + GRADIENT_BAND / 2.0 - top) / (2.0 * half);
+            var t = (y + GRADIENT_BAND / 2.0 - top) / cap;
             bdc.setClip(0, y, w, GRADIENT_BAND);
             bdc.setColor(lerpColor(colors[0], colors[1], t), Graphics.COLOR_TRANSPARENT);
             bdc.drawText(w / 2, h / 2, font, text, flags);
@@ -501,7 +530,7 @@ class WatchFaceView extends WatchUi.WatchFace {
     }
 
     private function drawSun(dc as Dc) as Void {
-        drawIconText(dc, _sunIsSunset ? _sunsetIcon : _sunriseIcon, Settings.accentColor(_hourColor),
+        drawIconText(dc, _sunIsSunset ? _sunsetIcon : _sunriseIcon, SUN_COLOR,
             _sunText, _sunFont, SECONDARY, _cx, sy(SUN_Y));
     }
 

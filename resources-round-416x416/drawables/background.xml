@@ -3,9 +3,9 @@
     <bitmap id="TopoBg" filename="../../resources/drawables/topo_bg.png" scaleX="416" scaleY="416">
         <palette disableTransparency="true">
             <color>000000</color>
-            <color>131517</color>
-            <color>25282B</color>
-            <color>383C40</color>
+            <color>111315</color>
+            <color>212427</color>
+            <color>32363A</color>
         </palette>
     </bitmap>
 </drawables>
