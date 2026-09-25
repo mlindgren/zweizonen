@@ -265,17 +265,14 @@ class WatchFaceView extends WatchUi.WatchFace {
         for (var i = 0; i < sources.size(); i++) {
             var degrees = validDegrees(sources[i]);
             if (degrees != null) {
-                System.println("location source " + i + ": " + degrees[0].format("%.2f") + "," + degrees[1].format("%.2f"));
                 Application.Storage.setValue("lastLocation", degrees);
                 return sources[i];
             }
         }
         var saved = Application.Storage.getValue("lastLocation");
         if (saved instanceof Array && saved.size() == 2) {
-            System.println("location source: stored");
             return new Position.Location({:latitude => saved[0], :longitude => saved[1], :format => :degrees});
         }
-        System.println("location source: none");
         return null;
     }
 
