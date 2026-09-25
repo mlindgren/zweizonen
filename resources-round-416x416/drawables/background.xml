@@ -1,0 +1,11 @@
+<drawables>
+    <!-- The background image is drawn at 454 px; scale it for 416 px screens -->
+    <bitmap id="TopoBg" filename="../../resources/drawables/topo_bg.png" scaleX="416" scaleY="416">
+        <palette disableTransparency="true">
+            <color>000000</color>
+            <color>131517</color>
+            <color>25282B</color>
+            <color>383C40</color>
+        </palette>
+    </bitmap>
+</drawables>

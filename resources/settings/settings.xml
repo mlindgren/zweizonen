@@ -1,6 +1,8 @@
 <settings>
     <setting propertyKey="@Properties.HourColor" title="@Strings.HourColorTitle">
         <settingConfig type="list">
+            <listEntry value="-1">@Strings.ColorRedOrange</listEntry>
+            <listEntry value="-2">@Strings.ColorGreenBlue</listEntry>
             <listEntry value="16755200">@Strings.ColorAmber</listEntry>
             <listEntry value="16777215">@Strings.ColorWhite</listEntry>
             <listEntry value="16724016">@Strings.ColorRed</listEntry>
@@ -92,5 +94,8 @@
             <listEntry value="30">@Strings.City30</listEntry>
             <listEntry value="31">@Strings.City31</listEntry>
         </settingConfig>
+    </setting>
+    <setting propertyKey="@Properties.ShowBackground" title="@Strings.ShowBackgroundTitle">
+        <settingConfig type="boolean"/>
     </setting>
 </settings>

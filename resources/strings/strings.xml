@@ -2,7 +2,9 @@
     <string id="AppName">Quadrant Arcs</string>
     <string id="SettingsTitle">Settings</string>
 
-    <string id="HourColorTitle">Hour digit color</string>
+    <string id="HourColorTitle">Hour color</string>
+    <string id="ColorRedOrange">Red-orange gradient</string>
+    <string id="ColorGreenBlue">Green-blue gradient</string>
     <string id="ColorAmber">Amber</string>
     <string id="ColorWhite">White</string>
     <string id="ColorRed">Red</string>
@@ -14,10 +16,10 @@
     <string id="ColorPurple">Purple</string>
     <string id="ColorPink">Pink</string>
 
-    <string id="ArcTopLeftTitle">Top-left arc</string>
-    <string id="ArcTopRightTitle">Top-right arc</string>
-    <string id="ArcBottomLeftTitle">Bottom-left arc</string>
-    <string id="ArcBottomRightTitle">Bottom-right arc</string>
+    <string id="ArcTopLeftTitle">Top-left gauge</string>
+    <string id="ArcTopRightTitle">Top-right gauge</string>
+    <string id="ArcBottomLeftTitle">Bottom-left gauge</string>
+    <string id="ArcBottomRightTitle">Bottom-right gauge</string>
     <string id="MetricNone">None</string>
     <string id="MetricBodyBattery">Body Battery</string>
     <string id="MetricWatchBattery">Watch battery</string>
@@ -27,6 +29,7 @@
     <string id="MetricFloors">Floors goal</string>
 
     <string id="AltZoneTitle">Second time zone</string>
+    <string id="ShowBackgroundTitle">Topographic background</string>
     <string id="City0">UTC</string>
     <string id="City1">London</string>
     <string id="City2">Paris</string>

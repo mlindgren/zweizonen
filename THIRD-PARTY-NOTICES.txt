@@ -4,6 +4,6 @@ https://github.com/erikflowers/weather-icons  (https://erikflowers.github.io/wea
 Per the project's README, the icons are licensed under the SIL Open Font License 1.1
 (https://openfontlicense.org). They have been recolored for use on a dark watch face.
 
-Arc icons (resources/drawables/icons/arc-*.svg) are Material Symbols by Google,
+Gauge icons (resources/drawables/icons/gauge-*.svg) are Material Symbols by Google,
 https://github.com/google/material-design-icons, licensed under the Apache License 2.0.
-They have been recolored to match each arc.
+They have been recolored to match each gauge.

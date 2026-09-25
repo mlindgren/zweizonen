@@ -10,56 +10,82 @@ import Toybox.Time.Gregorian;
 import Toybox.WatchUi;
 import Toybox.Weather;
 
+//! Layout coordinates are in "design pixels" for a 454 px screen (from the
+//! design mockup) and are scaled to the actual screen size.
 class WatchFaceView extends WatchUi.WatchFace {
 
-    // Font sizes as a fraction of screen height
-    private const TIME_SIZE = 0.40;
-    private const ALT_SIZE = 0.17;
-    private const SEC_SIZE = 0.095;
-    private const TEXT_SIZE = 0.075;
-    private const LABEL_SIZE = 0.048;
+    private const DESIGN_SIZE = 454.0;
 
-    // In the vector fonts used here, digits are about half the font height tall
-    // and centered in the font box.
-    private const DIGIT_HEIGHT = 0.5;
-    // ...but sit slightly high in the box; shift down by this share of the font height
-    private const DIGIT_DROP = 0.024;
+    // Row centers (design px)
+    private const WEATHER_Y = 58;
+    private const DATE_Y = 90;
+    private const HOUR_Y = 161;
+    private const MINUTE_Y = 274;
+    private const ALT_Y = 356;
+    private const SUN_Y = 389;
 
-    // Quadrant arcs: gap on either side of the 12/3/6/9 axes, in degrees
-    private const ARC_GAP = 12;
-    private const ARC_SPAN = 90 - 2 * ARC_GAP;
-    private const ARC_TRACK_COLOR = 0x262626;
+    // Gauges: centers (design px) in the order TL, TR, BL, BR; ring radius and stroke
+    private const GAUGE_X = [98, 356, 98, 356];
+    private const GAUGE_Y = [172, 172, 284, 284];
+    private const GAUGE_RADIUS = 33;
+    private const GAUGE_STROKE = 5;
+
+    // Bezel (design px)
+    private const TICK_OUTER = 220;
+    private const MINUTE_TICK_INNER = 212;
+    private const HOUR_TICK_INNER = 208;
+    private const SECONDS_RADIUS = 224.5;
+    private const SECONDS_STROKE = 4;
+
+    // Font sizes (design px)
+    private const TIME_SIZE = 122;
+    private const SECONDS_SIZE = 28;
+    private const DATE_SIZE = 22;
+    private const WEATHER_SIZE = 24;
+    private const ALT_SIZE = 30;
+    private const LABEL_SIZE = 15;
+    private const SUN_SIZE = 22;
+    private const GAUGE_SIZE = 20;
+
+    // Roboto Condensed digits are about 0.71 of the font size tall
+    private const DIGIT_HEIGHT = 0.71;
+
+    // Band height (px) for gradient text; smaller is smoother but slower to render
+    private const GRADIENT_BAND = 2;
+
+    // Colors
+    private const PRIMARY = 0xECE9E2;
+    private const SECONDARY = 0xC9CCD0;
+    private const DATE_COLOR = 0xAEB3B8;
+    private const DIM = 0x6B7177;
+    private const AOD_TEXT = 0x9A9A9A;
+    private const GAUGE_TRACK = 0x1F2327;
+    private const TICK = 0x2A2E32;
+    private const SECONDS_TRACK = 0x15171A;
 
     // Draws crosshair lines through the screen center to check alignment
     private const DEBUG_GUIDES = false;
-
-    private const DIM_COLOR = 0x9A9A9A;
-    private const LABEL_COLOR = 0x8A8A8A;
 
     private var _w as Number = 0;
     private var _h as Number = 0;
     private var _cx as Number = 0;
     private var _cy as Number = 0;
-    private var _arcRadius as Number = 0;
-    private var _arcPen as Number = 0;
-
-    // Vertical centers of each row, computed in onLayout
-    private var _weatherY as Number = 0;
-    private var _dateY as Number = 0;
-    private var _altY as Number = 0;
-    private var _sunY as Number = 0;
+    private var _s as Float = 1.0;
 
     private var _timeFont as FontType = Graphics.FONT_NUMBER_THAI_HOT;
     private var _secFont as FontType = Graphics.FONT_TINY;
-    private var _altFont as FontType = Graphics.FONT_MEDIUM;
-    private var _textFont as FontType = Graphics.FONT_SMALL;
+    private var _dateFont as FontType = Graphics.FONT_SMALL;
+    private var _weatherFont as FontType = Graphics.FONT_SMALL;
+    private var _altFont as FontType = Graphics.FONT_SMALL;
     private var _labelFont as FontType = Graphics.FONT_XTINY;
+    private var _sunFont as FontType = Graphics.FONT_SMALL;
+    private var _gaugeFont as FontType = Graphics.FONT_TINY;
 
     private var _isAwake as Boolean = true;
 
     // Settings
-    private var _hourColor as Number = 0xFFAA00;
-    private var _arcMetrics as Array<Number> = [1, 2, 3, 4];
+    private var _hourColor as Number = Settings.GRADIENT_RED_ORANGE;
+    private var _gaugeMetrics as Array<Number> = [1, 2, 3, 4];
     private var _altZone as Number = 0;
 
     // Values refreshed once per minute (or when the 12/24h setting changes)
@@ -73,9 +99,14 @@ class WatchFaceView extends WatchUi.WatchFace {
     private var _sunIsSunset as Boolean = true;
     private var _altOffset as Number = 0;
 
+    private var _background as BitmapResource?;
     private var _sunriseIcon as BitmapResource?;
     private var _sunsetIcon as BitmapResource?;
-    private var _arcIcons as Array<BitmapResource?> = [null, null, null, null];
+    private var _gaugeIcons as Array<BitmapResource?> = [null, null, null, null];
+
+    // Hour digits rendered with their gradient; rebuilt when the text or color changes
+    private var _hourBitmap as BufferedBitmap?;
+    private var _hourBitmapKey as String = "";
 
     function initialize() {
         WatchFace.initialize();
@@ -84,18 +115,20 @@ class WatchFaceView extends WatchUi.WatchFace {
 
     function loadSettings() as Void {
         _hourColor = Settings.getNumber("HourColor");
-        // Quadrant order used by drawArcs: TR, TL, BL, BR
-        _arcMetrics = [
-            Settings.getNumber("ArcTopRight"),
+        _gaugeMetrics = [
             Settings.getNumber("ArcTopLeft"),
+            Settings.getNumber("ArcTopRight"),
             Settings.getNumber("ArcBottomLeft"),
             Settings.getNumber("ArcBottomRight")
         ];
         _altZone = Settings.getNumber("AltZone");
         for (var q = 0; q < 4; q++) {
-            var id = Metrics.getIcon(_arcMetrics[q]);
-            _arcIcons[q] = id != null ? WatchUi.loadResource(id) as BitmapResource : null;
+            var id = Metrics.getIcon(_gaugeMetrics[q]);
+            _gaugeIcons[q] = id != null ? WatchUi.loadResource(id) as BitmapResource : null;
         }
+        _background = Settings.getBoolean("ShowBackground", true)
+            ? WatchUi.loadResource(Rez.Drawables.TopoBg) as BitmapResource : null;
+        _hourBitmapKey = "";
         _lastMinute = -1;
     }
 
@@ -104,52 +137,46 @@ class WatchFaceView extends WatchUi.WatchFace {
         _h = dc.getHeight();
         _cx = _w / 2;
         _cy = _h / 2;
-        _arcPen = (_w * 0.046).toNumber();
-        _arcRadius = _cx - _arcPen / 2 - (_w * 0.01).toNumber();
+        _s = _w / DESIGN_SIZE;
 
-        _timeFont = vectorFont(["BionicBold", "RobotoCondensedBold"], TIME_SIZE, Graphics.FONT_NUMBER_THAI_HOT);
-        _secFont = vectorFont(["BionicBold", "RobotoCondensedBold"], SEC_SIZE, Graphics.FONT_TINY);
-        _altFont = vectorFont(["BionicBold", "RobotoCondensedBold"], ALT_SIZE, Graphics.FONT_MEDIUM);
-        _textFont = vectorFont(["RobotoCondensedBold"], TEXT_SIZE, Graphics.FONT_SMALL);
-        _labelFont = vectorFont(["RobotoCondensedBold"], LABEL_SIZE, Graphics.FONT_XTINY);
+        _timeFont = font(TIME_SIZE, Graphics.FONT_NUMBER_THAI_HOT);
+        _secFont = font(SECONDS_SIZE, Graphics.FONT_TINY);
+        _dateFont = font(DATE_SIZE, Graphics.FONT_SMALL);
+        _weatherFont = font(WEATHER_SIZE, Graphics.FONT_SMALL);
+        _altFont = font(ALT_SIZE, Graphics.FONT_SMALL);
+        _labelFont = font(LABEL_SIZE, Graphics.FONT_XTINY);
+        _sunFont = font(SUN_SIZE, Graphics.FONT_SMALL);
+        _gaugeFont = font(GAUGE_SIZE, Graphics.FONT_TINY);
 
         _sunriseIcon = WatchUi.loadResource(Rez.Drawables.WiSunrise) as BitmapResource;
         _sunsetIcon = WatchUi.loadResource(Rez.Drawables.WiSunset) as BitmapResource;
-
-        // The main time is centered on the screen; other rows stack around it
-        // using the visible digit/cap heights rather than the font boxes.
-        var gap = (_h * 0.05).toNumber();
-        var timeHalf = digitHalf(_timeFont);
-        var textHalf = digitHalf(_textFont);
-        var altHalf = digitHalf(_altFont);
-        _dateY = _cy - timeHalf - gap - textHalf;
-        _weatherY = _dateY - textHalf - gap - (_h * 0.035).toNumber();
-        _altY = _cy + timeHalf + gap + altHalf;
-        _sunY = _altY + altHalf + gap + (_h * 0.03).toNumber();
+        _hourBitmapKey = "";
     }
 
-    private function digitHalf(font as FontType) as Number {
-        return (dcFontHeight(font) * DIGIT_HEIGHT / 2).toNumber();
-    }
-
-    private function digitDrop(font as FontType) as Number {
-        return (dcFontHeight(font) * DIGIT_DROP).toNumber();
-    }
-
-    private function dcFontHeight(font as FontType) as Number {
-        return Graphics.getFontAscent(font) + Graphics.getFontDescent(font);
-    }
-
-    //! Returns a scalable system font sized as a fraction of screen height,
-    //! or the given built-in font on devices without vector font support.
-    private function vectorFont(faces as Array<String>, heightFraction as Float, fallback as FontType) as FontType {
+    //! Roboto Condensed Bold at a design-pixel size, or the given built-in font
+    //! on devices without scalable fonts.
+    private function font(size as Number, fallback as FontType) as FontType {
         if (Graphics has :getVectorFont) {
-            var font = Graphics.getVectorFont({:face => faces, :size => (_h * heightFraction).toNumber()});
-            if (font != null) {
-                return font;
+            var f = Graphics.getVectorFont({:face => ["RobotoCondensedBold"], :size => px(size)});
+            if (f != null) {
+                return f;
             }
         }
         return fallback;
+    }
+
+    //! Design-pixel length to screen pixels
+    private function px(v as Numeric) as Number {
+        return (v * _s + 0.5).toNumber();
+    }
+
+    //! Design-pixel coordinates to screen coordinates
+    private function sx(x as Numeric) as Number {
+        return _cx + px(x - DESIGN_SIZE / 2);
+    }
+
+    private function sy(y as Numeric) as Number {
+        return _cy + px(y - DESIGN_SIZE / 2);
     }
 
     function onUpdate(dc as Dc) as Void {
@@ -168,14 +195,20 @@ class WatchFaceView extends WatchUi.WatchFace {
         }
 
         if (_isAwake) {
-            drawArcs(dc);
+            if (_background != null) {
+                dc.drawBitmap(_cx - _background.getWidth() / 2, _cy - _background.getHeight() / 2, _background);
+            }
+            drawBezel(dc, clock.sec);
+            for (var q = 0; q < 4; q++) {
+                drawGauge(dc, q);
+            }
             drawWeather(dc);
             drawSun(dc);
             drawTexts(dc, clock, 0, 0);
         } else {
-            // Always-on: same text layout, no arcs/fields/seconds, shifted a
-            // few pixels each minute to limit AMOLED burn-in.
-            var step = (_w * 0.01).toNumber();
+            // Always-on: date and both times only, shifted a few pixels each
+            // minute to limit AMOLED burn-in.
+            var step = px(4);
             drawTexts(dc, clock, ((clock.min % 3) - 1) * step, (((clock.min / 3) % 3) - 1) * step);
         }
 
@@ -317,155 +350,230 @@ class WatchFaceView extends WatchUi.WatchFace {
 
     // ---- Drawing ----------------------------------------------------------
 
-    //! Date, main time and alternate time; shared by the normal and always-on views.
+    //! Half the visible digit (or cap) height of a font
+    private function digitHalf(font as FontType) as Number {
+        return (fontSize(font) * DIGIT_HEIGHT / 2).toNumber();
+    }
+
+    //! Nominal pixel size of a font (ascent + descent)
+    private function fontSize(font as FontType) as Number {
+        return Graphics.getFontAscent(font) + Graphics.getFontDescent(font);
+    }
+
+    //! Date, stacked main time and second time; shared by the normal and always-on views.
     private function drawTexts(dc as Dc, clock as System.ClockTime, dx as Number, dy as Number) as Void {
-        var textColor = _isAwake ? Graphics.COLOR_WHITE : DIM_COLOR;
-        dc.setColor(textColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(_cx + dx, _dateY + dy, _textFont, _dateText, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        var flags = Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER;
+        drawSpaced(dc, _dateText, _dateFont, _isAwake ? DATE_COLOR : AOD_TEXT, _cx + dx, sy(DATE_Y) + dy, px(3), false);
 
-        drawTime(dc, clock, textColor, dx, dy);
+        // Hour line, with AM/PM at the top right of the digits in 12-hour mode
+        var hourY = sy(HOUR_Y) + dy;
+        var hourRight = drawHour(dc, hourText(clock.hour), _cx + dx, hourY);
+        var suffix = amPm(clock.hour);
+        if (suffix != null) {
+            dc.setColor(DIM, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(hourRight + px(6), hourY - digitHalf(_timeFont) + digitHalf(_secFont), _secFont, suffix, flags);
+        }
 
+        // Minute line, with seconds at the bottom right while awake
+        var minuteY = sy(MINUTE_Y) + dy;
+        var minutes = clock.min.format("%02d");
+        dc.setColor(_isAwake ? PRIMARY : AOD_TEXT, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(_cx + dx, minuteY, _timeFont, minutes, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        if (_isAwake) {
+            var minuteRight = _cx + dx + dc.getTextWidthInPixels(minutes, _timeFont) / 2;
+            dc.setColor(DIM, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(minuteRight + px(6), minuteY + digitHalf(_timeFont) - digitHalf(_secFont), _secFont,
+                clock.sec.format("%02d"), flags);
+        }
+
+        // Second time zone: digits centered, zone label (and AM/PM) to the right on the same baseline
         var alt = Gregorian.utcInfo(Time.now().add(new Time.Duration(_altOffset)), Time.FORMAT_SHORT);
         var altHour = alt.hour as Number;
         var altText = formatClock(altHour, alt.min as Number, false);
+        var label = AltTime.label(_altZone);
         var altSuffix = amPm(altHour);
-        var zone = AltTime.label(_altZone);
-        var width = dc.getTextWidthInPixels(altText, _altFont);
-        // Center the digits alone; the AM/PM and zone tags hang off to the right
-        var x = _cx + dx - width / 2;
-        dc.setColor(textColor, Graphics.COLOR_TRANSPARENT);
-        var altY = _altY + dy + digitDrop(_altFont);
-        dc.drawText(x, altY, _altFont, altText, Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
-        drawSideTags(dc, x + width, altY, _altFont, altSuffix, zone, _labelFont);
-    }
-
-    private function drawTime(dc as Dc, clock as System.ClockTime, minuteColor as Number, dx as Number, dy as Number) as Void {
-        var hours = hourText(clock.hour);
-        var minutes = clock.min.format("%02d");
-        var colon = ":";
-        var wh = dc.getTextWidthInPixels(hours, _timeFont);
-        var wc = dc.getTextWidthInPixels(colon, _timeFont);
-        var wm = dc.getTextWidthInPixels(minutes, _timeFont);
-        var suffix = amPm(clock.hour);
-        var seconds = _isAwake ? clock.sec.format("%02d") : null;
-
-        // Center HH:MM together with the AM/PM + seconds column so wide times
-        // like 23:59 stay clear of the arcs.
-        var x = _cx + dx - (wh + wc + wm + sideWidth(dc, suffix, seconds, _secFont)) / 2;
-        var y = _cy + dy + digitDrop(_timeFont);
-
-        var flags = Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER;
-        dc.setColor(_hourColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(x, y, _timeFont, hours, flags);
-        dc.setColor(minuteColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(x + wh, y, _timeFont, colon, flags);
-        dc.drawText(x + wh + wc, y, _timeFont, minutes, flags);
-
-        drawSideTags(dc, x + wh + wc + wm, y, _timeFont, suffix, seconds, _secFont);
-    }
-
-    //! Width taken by drawSideTags, including the gap before it.
-    private function sideWidth(dc as Dc, top as String?, bottom as String?, bottomFont as FontType) as Number {
-        var wt = top != null ? dc.getTextWidthInPixels(top, _labelFont) : 0;
-        var wb = bottom != null ? dc.getTextWidthInPixels(bottom, bottomFont) : 0;
-        if (wt == 0 && wb == 0) {
-            return 0;
+        if (altSuffix != null) {
+            label = altSuffix + " " + label;
         }
-        return (_w * 0.012).toNumber() + (wt > wb ? wt : wb);
+        var altY = sy(ALT_Y) + dy;
+        var altRight = _cx + dx + dc.getTextWidthInPixels(altText, _altFont) / 2;
+        dc.setColor(_isAwake ? SECONDARY : AOD_TEXT, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(_cx + dx, altY, _altFont, altText, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        drawSpaced(dc, label, _labelFont, DIM, altRight + px(5), altY + digitHalf(_altFont) - digitHalf(_labelFont),
+            px(2), true);
     }
 
-    //! Small tags to the right of large digits: one aligned to the top of the
-    //! digits (AM/PM) and one to their bottom (seconds or zone label).
-    private function drawSideTags(dc as Dc, x as Number, y as Number, font as FontType,
-                                  top as String?, bottom as String?, bottomFont as FontType) as Void {
-        var flags = Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER;
+    //! Draws the hour digits centered at (x, y) in the configured color or
+    //! gradient. Returns the right edge of the digits.
+    private function drawHour(dc as Dc, text as String, x as Number, y as Number) as Number {
+        var key = text + "/" + _hourColor;
+        if (!key.equals(_hourBitmapKey)) {
+            _hourBitmap = renderGradientText(dc, text, _timeFont, Settings.hourColors(_hourColor));
+            _hourBitmapKey = key;
+        }
+        var bmp = _hourBitmap;
+        if (bmp == null) {
+            return x;
+        }
+        dc.drawBitmap(x - bmp.getWidth() / 2, y - bmp.getHeight() / 2, bmp);
+        return x + bmp.getWidth() / 2;
+    }
+
+    //! Connect IQ can't fill text with a gradient, so the text is drawn once per
+    //! thin horizontal band, each clipped to its band and in its own color. This
+    //! goes into an offscreen bitmap that is reused until the text changes.
+    //! The bitmap is exactly as wide as the text and centered on it vertically.
+    private function renderGradientText(dc as Dc, text as String, font as FontType, colors as [Number, Number]) as BufferedBitmap {
+        var w = dc.getTextWidthInPixels(text, font);
+        var h = fontSize(font);
+        var bmp = Graphics.createBufferedBitmap({:width => w, :height => h}).get() as BufferedBitmap;
+        var bdc = bmp.getDc();
+        if (bdc has :setAntiAlias) {
+            bdc.setAntiAlias(true);
+        }
+        var flags = Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER;
+        if (colors[0] == colors[1]) {
+            bdc.setColor(colors[0], Graphics.COLOR_TRANSPARENT);
+            bdc.drawText(w / 2, h / 2, font, text, flags);
+            return bmp;
+        }
+        // The gradient spans the visible digits, not the whole font box
         var half = digitHalf(font);
-        x += (_w * 0.012).toNumber();
-        dc.setColor(_isAwake ? LABEL_COLOR : DIM_COLOR, Graphics.COLOR_TRANSPARENT);
-        if (top != null) {
-            dc.drawText(x, y - half + digitHalf(_labelFont), _labelFont, top, flags);
+        var top = h / 2 - half;
+        for (var y = 0; y < h; y += GRADIENT_BAND) {
+            var t = (y + GRADIENT_BAND / 2.0 - top) / (2.0 * half);
+            bdc.setClip(0, y, w, GRADIENT_BAND);
+            bdc.setColor(lerpColor(colors[0], colors[1], t), Graphics.COLOR_TRANSPARENT);
+            bdc.drawText(w / 2, h / 2, font, text, flags);
         }
-        if (bottom != null) {
-            dc.drawText(x, y + half - digitHalf(bottomFont), bottomFont, bottom, flags);
+        bdc.clearClip();
+        return bmp;
+    }
+
+    private function lerpColor(a as Number, b as Number, t as Float) as Number {
+        t = t < 0.0 ? 0.0 : (t > 1.0 ? 1.0 : t);
+        var r = ((a >> 16) & 0xFF) + ((((b >> 16) & 0xFF) - ((a >> 16) & 0xFF)) * t).toNumber();
+        var g = ((a >> 8) & 0xFF) + ((((b >> 8) & 0xFF) - ((a >> 8) & 0xFF)) * t).toNumber();
+        var bl = (a & 0xFF) + (((b & 0xFF) - (a & 0xFF)) * t).toNumber();
+        return (r << 16) | (g << 8) | bl;
+    }
+
+    //! Draws text with extra spacing between letters, vertically centered on y.
+    //! The text is centered on x, or starts at x when leftAligned is set.
+    private function drawSpaced(dc as Dc, text as String, font as FontType, color as Number, x as Number, y as Number,
+                                spacing as Number, leftAligned as Boolean) as Void {
+        var chars = text.toCharArray();
+        if (!leftAligned) {
+            var total = spacing * (chars.size() - 1);
+            for (var i = 0; i < chars.size(); i++) {
+                total += dc.getTextWidthInPixels(chars[i].toString(), font);
+            }
+            x -= total / 2;
         }
+        dc.setColor(color, Graphics.COLOR_TRANSPARENT);
+        for (var i = 0; i < chars.size(); i++) {
+            var c = chars[i].toString();
+            dc.drawText(x, y, font, c, Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+            x += dc.getTextWidthInPixels(c, font) + spacing;
+        }
+    }
+
+    //! Draws an icon followed by text, the pair centered on x and vertically on y.
+    private function drawIconText(dc as Dc, icon as BitmapResource?, tint as Number?, text as String,
+                                  font as FontType, color as Number, x as Number, y as Number) as Void {
+        var gap = px(4);
+        var iconW = icon != null ? icon.getWidth() + gap : 0;
+        var left = x - (iconW + dc.getTextWidthInPixels(text, font)) / 2;
+        if (icon != null) {
+            var iy = y - icon.getHeight() / 2;
+            if (tint != null && dc has :drawBitmap2) {
+                dc.drawBitmap2(left, iy, icon, {:tintColor => tint});
+            } else {
+                dc.drawBitmap(left, iy, icon);
+            }
+        }
+        dc.setColor(color, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(left + iconW, y, font, text, Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
     }
 
     private function drawWeather(dc as Dc) as Void {
-        var icon = _weatherIcon;
-        var width = iconWidth(icon) + dc.getTextWidthInPixels(_tempText, _textFont);
-        drawIconText(dc, icon, _tempText, _cx - width / 2, _weatherY);
+        drawIconText(dc, _weatherIcon, null, _tempText, _weatherFont, PRIMARY, _cx, sy(WEATHER_Y));
     }
 
     private function drawSun(dc as Dc) as Void {
-        var icon = _sunIsSunset ? _sunsetIcon : _sunriseIcon;
-        var width = iconWidth(icon) + dc.getTextWidthInPixels(_sunText, _textFont);
-        drawIconText(dc, icon, _sunText, _cx - width / 2, _sunY);
+        drawIconText(dc, _sunIsSunset ? _sunsetIcon : _sunriseIcon, Settings.accentColor(_hourColor),
+            _sunText, _sunFont, SECONDARY, _cx, sy(SUN_Y));
     }
 
-    private function iconWidth(icon as BitmapResource?) as Number {
-        return icon != null ? icon.getWidth() : 0;
-    }
-
-    //! Draws an icon followed by text, vertically centered on y. Returns the right edge.
-    private function drawIconText(dc as Dc, icon as BitmapResource?, text as String, x as Number, y as Number) as Number {
-        if (icon != null) {
-            dc.drawBitmap(x, y - icon.getHeight() / 2, icon);
-            x += icon.getWidth();
-        }
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(x, y, _textFont, text, Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
-        return x + dc.getTextWidthInPixels(text, _textFont);
-    }
-
-    //! Quadrants in order TR, TL, BL, BR. Each fills from its horizontal
-    //! (3 or 9 o'clock) end toward 12 or 6 o'clock.
-    private function drawArcs(dc as Dc) as Void {
-        for (var q = 0; q < 4; q++) {
-            // Start angle at the horizontal end, and the direction of fill
-            var start = (q == 0) ? ARC_GAP : (q == 1) ? 180 - ARC_GAP : (q == 2) ? 180 + ARC_GAP : 360 - ARC_GAP;
-            var dir = (q % 2 == 0) ? 1 : -1;
-
-            drawArcSegment(dc, start, start + dir * ARC_SPAN, ARC_TRACK_COLOR);
-
-            var metric = _arcMetrics[q];
-            var fraction = Metrics.getFraction(metric);
-            if (fraction != null && fraction > 0.0) {
-                var end = start + dir * (ARC_SPAN * fraction).toNumber();
-                drawArcSegment(dc, start, end, Metrics.getColor(metric, fraction));
+    //! Minute and hour ticks, the 12 o'clock accent marker, and the seconds ring.
+    private function drawBezel(dc as Dc, sec as Number) as Void {
+        for (var i = 0; i < 60; i++) {
+            if (i == 0) {
+                continue;
             }
-
-            // Metric icon just inside the middle of the arc
-            var icon = _arcIcons[q];
-            if (icon != null) {
-                var a = Math.toRadians(start + dir * ARC_SPAN / 2);
-                var r = _arcRadius - _arcPen / 2 - _w * 0.015 - icon.getWidth() / 2;
-                dc.drawBitmap(_cx + r * Math.cos(a) - icon.getWidth() / 2,
-                              _cy - r * Math.sin(a) - icon.getHeight() / 2, icon);
-            }
+            var isHour = i % 5 == 0;
+            dc.setPenWidth(isHour ? px(3) : px(2));
+            dc.setColor(isHour ? DIM : TICK, Graphics.COLOR_TRANSPARENT);
+            radialLine(dc, i * 6, isHour ? HOUR_TICK_INNER : MINUTE_TICK_INNER, TICK_OUTER);
         }
+        dc.setPenWidth(px(4));
+        dc.setColor(Settings.accentColor(_hourColor), Graphics.COLOR_TRANSPARENT);
+        radialLine(dc, 0, HOUR_TICK_INNER - 2, TICK_OUTER + 2);
 
+        // Seconds ring: faint track, fill growing clockwise from 12 o'clock
+        var r = SECONDS_RADIUS * _s;
+        dc.setPenWidth(px(SECONDS_STROKE));
+        dc.setColor(SECONDS_TRACK, Graphics.COLOR_TRANSPARENT);
+        dc.drawCircle(_cx, _cy, r);
+        if (sec > 0) {
+            dc.setColor(DIM, Graphics.COLOR_TRANSPARENT);
+            dc.drawArc(_cx, _cy, r, Graphics.ARC_CLOCKWISE, 90, 90 - sec * 6);
+        }
+        dc.setPenWidth(1);
     }
 
-    //! Draws an arc band with flat ends as a filled polygon. Angles in degrees,
-    //! counter-clockwise from 3 o'clock.
-    private function drawArcSegment(dc as Dc, from as Number, to as Number, color as Number) as Void {
-        if (from == to) {
+    //! Line along a radius; angle in degrees clockwise from 12 o'clock, radii in design px.
+    private function radialLine(dc as Dc, angle as Number, inner as Numeric, outer as Numeric) as Void {
+        var a = Math.toRadians(angle);
+        var sin = Math.sin(a);
+        var cos = Math.cos(a);
+        dc.drawLine(_cx + inner * _s * sin, _cy - inner * _s * cos, _cx + outer * _s * sin, _cy - outer * _s * cos);
+    }
+
+    //! Ring gauge with a solid black center, filling clockwise from 12 o'clock,
+    //! with the metric icon above its value.
+    private function drawGauge(dc as Dc, q as Number) as Void {
+        var metric = _gaugeMetrics[q];
+        if (metric == Metrics.NONE) {
             return;
         }
-        var inner = _arcRadius - _arcPen / 2.0;
-        var outer = _arcRadius + _arcPen / 2.0;
-        // Up to 22 steps per side keeps the polygon under the 64-point limit
-        var steps = ((to - from).abs() / 3) + 1;
-        var outerPts = [] as Array<[Numeric, Numeric]>;
-        var innerPts = [] as Array<[Numeric, Numeric]>;
-        for (var i = 0; i <= steps; i++) {
-            var a = Math.toRadians(from + (to - from) * i.toFloat() / steps);
-            var c = Math.cos(a);
-            var s = Math.sin(a);
-            outerPts.add([_cx + outer * c, _cy - outer * s]);
-            innerPts.add([_cx + inner * c, _cy - inner * s]);
+        var x = sx(GAUGE_X[q]);
+        var y = sy(GAUGE_Y[q]);
+        var r = GAUGE_RADIUS * _s;
+        var stroke = px(GAUGE_STROKE);
+        var reading = Metrics.getReading(metric);
+        var fraction = reading[0];
+
+        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
+        dc.fillCircle(x, y, r + stroke / 2.0);
+        dc.setPenWidth(stroke);
+        dc.setColor(GAUGE_TRACK, Graphics.COLOR_TRANSPARENT);
+        dc.drawCircle(x, y, r);
+        if (fraction != null && fraction > 0.0) {
+            dc.setColor(Metrics.getColor(metric, fraction), Graphics.COLOR_TRANSPARENT);
+            if (fraction >= 1.0) {
+                dc.drawCircle(x, y, r);
+            } else {
+                dc.drawArc(x, y, r, Graphics.ARC_CLOCKWISE, 90, 90 - (360 * fraction).toNumber());
+            }
         }
-        dc.setColor(color, Graphics.COLOR_TRANSPARENT);
-        dc.fillPolygon(outerPts.addAll(innerPts.reverse()));
+        dc.setPenWidth(1);
+
+        var icon = _gaugeIcons[q];
+        if (icon != null) {
+            dc.drawBitmap(x - icon.getWidth() / 2, y - px(11) - icon.getHeight() / 2, icon);
+        }
+        dc.setColor(PRIMARY, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(x, y + px(9), _gaugeFont, reading[1], Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
     }
 }

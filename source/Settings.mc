@@ -8,6 +8,43 @@ module Settings {
 
     const KEYS = ["AltZone", "HourColor", "ArcTopLeft", "ArcTopRight", "ArcBottomLeft", "ArcBottomRight"];
 
+    // Special HourColor values; any other value is a solid 0xRRGGBB color
+    const GRADIENT_RED_ORANGE = -1;
+    const GRADIENT_GREEN_BLUE = -2;
+
+    //! [top color, bottom color] for the hour digits
+    function hourColors(value as Number) as [Number, Number] {
+        switch (value) {
+            case GRADIENT_RED_ORANGE: return [0xF0483A, 0xFF9A1F];
+            case GRADIENT_GREEN_BLUE: return [0x4FD98A, 0x3DA5F4];
+        }
+        return [value, value];
+    }
+
+    //! Single accent color (12 o'clock marker, sun icon) matching the hour color
+    function accentColor(value as Number) as Number {
+        switch (value) {
+            case GRADIENT_RED_ORANGE: return 0xFF7A26;
+            case GRADIENT_GREEN_BLUE: return 0x46BFBF;
+        }
+        return value;
+    }
+
+    function getBoolean(key as String, fallback as Boolean) as Boolean {
+        try {
+            var value = Application.Properties.getValue(key);
+            if (value instanceof Boolean) {
+                return value;
+            }
+        } catch (e) {
+        }
+        return fallback;
+    }
+
+    function setBoolean(key as String, value as Boolean) as Void {
+        Application.Properties.setValue(key, value);
+    }
+
     function title(key as String) as ResourceId {
         switch (key) {
             case "AltZone":        return Rez.Strings.AltZoneTitle;
@@ -21,7 +58,7 @@ module Settings {
 
     function defaultValue(key as String) as Number {
         switch (key) {
-            case "HourColor":      return 0xFFAA00;
+            case "HourColor":      return GRADIENT_RED_ORANGE;
             case "ArcTopLeft":     return Metrics.BODY_BATTERY;
             case "ArcTopRight":    return Metrics.WATCH_BATTERY;
             case "ArcBottomLeft":  return Metrics.STEPS;
@@ -70,6 +107,8 @@ module Settings {
         }
         if (key.equals("HourColor")) {
             return [
+                [Rez.Strings.ColorRedOrange, GRADIENT_RED_ORANGE],
+                [Rez.Strings.ColorGreenBlue, GRADIENT_GREEN_BLUE],
                 [Rez.Strings.ColorAmber, 0xFFAA00],
                 [Rez.Strings.ColorWhite, 0xFFFFFF],
                 [Rez.Strings.ColorRed, 0xFF3030],

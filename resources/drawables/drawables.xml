@@ -1,28 +1,40 @@
 <drawables>
     <bitmap id="LauncherIcon" filename="launcher_icon.svg" scaleX="65" scaleY="65"/>
 
-    <!-- Weather Icons by Erik Flowers, SIL OFL 1.1 (see THIRD-PARTY-NOTICES.txt) -->
-    <bitmap id="WiDaySunny" filename="icons/wi-day-sunny.svg" scaleX="52" scaleY="52"/>
-    <bitmap id="WiNightClear" filename="icons/wi-night-clear.svg" scaleX="52" scaleY="52"/>
-    <bitmap id="WiDayCloudy" filename="icons/wi-day-cloudy.svg" scaleX="52" scaleY="52"/>
-    <bitmap id="WiNightCloudy" filename="icons/wi-night-alt-cloudy.svg" scaleX="52" scaleY="52"/>
-    <bitmap id="WiCloudy" filename="icons/wi-cloudy.svg" scaleX="52" scaleY="52"/>
-    <bitmap id="WiRain" filename="icons/wi-rain.svg" scaleX="52" scaleY="52"/>
-    <bitmap id="WiShowers" filename="icons/wi-showers.svg" scaleX="52" scaleY="52"/>
-    <bitmap id="WiThunderstorm" filename="icons/wi-thunderstorm.svg" scaleX="52" scaleY="52"/>
-    <bitmap id="WiSnow" filename="icons/wi-snow.svg" scaleX="52" scaleY="52"/>
-    <bitmap id="WiSleet" filename="icons/wi-sleet.svg" scaleX="52" scaleY="52"/>
-    <bitmap id="WiFog" filename="icons/wi-fog.svg" scaleX="52" scaleY="52"/>
-    <bitmap id="WiWindy" filename="icons/wi-windy.svg" scaleX="52" scaleY="52"/>
-    <bitmap id="WiNa" filename="icons/wi-na.svg" scaleX="52" scaleY="52"/>
-    <bitmap id="WiSunrise" filename="icons/wi-sunrise.svg" scaleX="56" scaleY="56"/>
-    <bitmap id="WiSunset" filename="icons/wi-sunset.svg" scaleX="56" scaleY="56"/>
+    <!-- Topographic background, reduced to a few greys to save memory -->
+    <bitmap id="TopoBg" filename="topo_bg.png">
+        <palette disableTransparency="true">
+            <color>000000</color>
+            <color>131517</color>
+            <color>25282B</color>
+            <color>383C40</color>
+        </palette>
+    </bitmap>
+
+    <!-- Weather Icons by Erik Flowers, SIL OFL 1.1 (see THIRD-PARTY-NOTICES.txt).
+         The SVGs have padding, so a 36 px bitmap gives a ~24 px glyph. -->
+    <bitmap id="WiDaySunny" filename="icons/wi-day-sunny.svg" scaleX="36" scaleY="36"/>
+    <bitmap id="WiNightClear" filename="icons/wi-night-clear.svg" scaleX="36" scaleY="36"/>
+    <bitmap id="WiDayCloudy" filename="icons/wi-day-cloudy.svg" scaleX="36" scaleY="36"/>
+    <bitmap id="WiNightCloudy" filename="icons/wi-night-alt-cloudy.svg" scaleX="36" scaleY="36"/>
+    <bitmap id="WiCloudy" filename="icons/wi-cloudy.svg" scaleX="36" scaleY="36"/>
+    <bitmap id="WiRain" filename="icons/wi-rain.svg" scaleX="36" scaleY="36"/>
+    <bitmap id="WiShowers" filename="icons/wi-showers.svg" scaleX="36" scaleY="36"/>
+    <bitmap id="WiThunderstorm" filename="icons/wi-thunderstorm.svg" scaleX="36" scaleY="36"/>
+    <bitmap id="WiSnow" filename="icons/wi-snow.svg" scaleX="36" scaleY="36"/>
+    <bitmap id="WiSleet" filename="icons/wi-sleet.svg" scaleX="36" scaleY="36"/>
+    <bitmap id="WiFog" filename="icons/wi-fog.svg" scaleX="36" scaleY="36"/>
+    <bitmap id="WiWindy" filename="icons/wi-windy.svg" scaleX="36" scaleY="36"/>
+    <bitmap id="WiNa" filename="icons/wi-na.svg" scaleX="36" scaleY="36"/>
+    <!-- White so they can be tinted with the accent color at draw time -->
+    <bitmap id="WiSunrise" filename="icons/wi-sunrise.svg" scaleX="30" scaleY="30" automaticPalette="false"/>
+    <bitmap id="WiSunset" filename="icons/wi-sunset.svg" scaleX="30" scaleY="30" automaticPalette="false"/>
 
     <!-- Material Symbols by Google, Apache 2.0 (see THIRD-PARTY-NOTICES.txt) -->
-    <bitmap id="ArcBodyBattery" filename="icons/arc-body-battery.svg" scaleX="30" scaleY="30"/>
-    <bitmap id="ArcWatchBattery" filename="icons/arc-watch-battery.svg" scaleX="30" scaleY="30"/>
-    <bitmap id="ArcSteps" filename="icons/arc-steps.svg" scaleX="30" scaleY="30"/>
-    <bitmap id="ArcRecovery" filename="icons/arc-recovery.svg" scaleX="30" scaleY="30"/>
-    <bitmap id="ArcIntensity" filename="icons/arc-intensity.svg" scaleX="30" scaleY="30"/>
-    <bitmap id="ArcFloors" filename="icons/arc-floors.svg" scaleX="30" scaleY="30"/>
+    <bitmap id="GaugeBodyBattery" filename="icons/gauge-body-battery.svg" scaleX="20" scaleY="20"/>
+    <bitmap id="GaugeWatchBattery" filename="icons/gauge-watch-battery.svg" scaleX="20" scaleY="20"/>
+    <bitmap id="GaugeSteps" filename="icons/gauge-steps.svg" scaleX="20" scaleY="20"/>
+    <bitmap id="GaugeRecovery" filename="icons/gauge-recovery.svg" scaleX="20" scaleY="20"/>
+    <bitmap id="GaugeIntensity" filename="icons/gauge-intensity.svg" scaleX="20" scaleY="20"/>
+    <bitmap id="GaugeFloors" filename="icons/gauge-floors.svg" scaleX="20" scaleY="20"/>
 </drawables>

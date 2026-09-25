@@ -2,7 +2,8 @@ import Toybox.Application;
 import Toybox.Lang;
 import Toybox.WatchUi;
 
-//! On-watch settings: one entry per setting, each opening a list of options.
+//! On-watch settings: one entry per list setting (each opening its options),
+//! plus a toggle for the background.
 class SettingsMenu extends WatchUi.Menu2 {
 
     function initialize() {
@@ -11,6 +12,8 @@ class SettingsMenu extends WatchUi.Menu2 {
             var key = Settings.KEYS[i];
             addItem(new WatchUi.MenuItem(Settings.title(key), Settings.currentLabel(key), key, null));
         }
+        addItem(new WatchUi.ToggleMenuItem(Rez.Strings.ShowBackgroundTitle, null, "ShowBackground",
+            Settings.getBoolean("ShowBackground", true), null));
     }
 }
 
@@ -22,6 +25,11 @@ class SettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
 
     function onSelect(item as WatchUi.MenuItem) as Void {
         var key = item.getId() as String;
+        if (item instanceof WatchUi.ToggleMenuItem) {
+            Settings.setBoolean(key, item.isEnabled());
+            (Application.getApp() as WatchFaceApp).onSettingsChanged();
+            return;
+        }
         var options = Settings.options(key);
         var current = Settings.getNumber(key);
         var menu = new WatchUi.Menu2({:title => Settings.title(key)});
