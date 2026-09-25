@@ -12,3 +12,6 @@ bin/
 .vscode/
 Thumbs.db
 desktop.ini
+
+# Local screenshots
+first_attempt.png
