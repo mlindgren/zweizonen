@@ -43,7 +43,8 @@ You can change settings in two places:
 ## Supported devices
 
 Round AMOLED watches with Connect IQ API level 5.0 or newer that include the Roboto
-Condensed Bold system font. The face has been tested in the simulator on:
+Condensed Bold system font. The face has been tested on a real in fēnix 8 Pro 47mm and
+in the simulator on:
 
 - fēnix 8 43mm, fēnix 8 Pro 47mm / 51mm
 - fēnix 9 47mm / 51mm, fēnix 9 Pro 47mm, fēnix 9 Pro 51mm
@@ -73,12 +74,14 @@ Requirements:
   openssl pkcs8 -topk8 -inform PEM -outform DER -in developer_key.pem -out developer_key.der -nocrypt
   ```
 
-Build and run (in Git Bash on Windows, or any POSIX shell):
+Build and run in Git Bash on Windows (`build.sh` uses the Windows SDK location and tools;
+other platforms can run the same `monkeyc` commands directly):
 
 ```sh
 ./build.sh                       # build bin/fenix8pro47mm.prg
 ./build.sh fr265                 # build for another device
 ./build.sh fenix8pro47mm --run   # build, start the simulator and load the face
+./build.sh --package             # build the Connect IQ Store package bin/zweizonen.iq
 ```
 
 To sideload onto a watch, connect it over USB and copy `bin/<device>.prg` to the
