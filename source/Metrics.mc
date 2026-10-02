@@ -28,7 +28,7 @@ module Metrics {
             case WATCH_BATTERY: return (fraction != null && fraction < 0.2) ? 0xF0483A : 0x62D26F;
             case STEPS:         return 0xF5C542;
             case RECOVERY:      return 0xA77BF3;
-            case INTENSITY:     return 0xE8618C;
+            case INTENSITY:     return 0xEF4444;
             case FLOORS:        return 0x4FD1C5;
         }
         return 0xECE9E2;

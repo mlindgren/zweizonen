@@ -111,6 +111,11 @@ class WatchFaceView extends WatchUi.WatchFace {
     private var _hourBitmap as BufferedBitmap?;
     private var _hourBitmapKey as String = "";
 
+    // Offscreen layer with everything except the seconds (see awakeLayer)
+    private var _layer as BufferedBitmap?;
+    private var _layerValid as Boolean = false;
+    private var _layerFailed as Boolean = false;
+
     function initialize() {
         WatchFace.initialize();
         loadSettings();
@@ -133,6 +138,7 @@ class WatchFaceView extends WatchUi.WatchFace {
             ? WatchUi.loadResource(Rez.Drawables.TopoBg) as BitmapResource : null;
         _hourBitmapKey = "";
         _lastMinute = -1;
+        _layerValid = false;
     }
 
     function onLayout(dc as Dc) as Void {
@@ -154,6 +160,8 @@ class WatchFaceView extends WatchUi.WatchFace {
         _sunriseIcon = WatchUi.loadResource(Rez.Drawables.WiSunrise) as BitmapResource;
         _sunsetIcon = WatchUi.loadResource(Rez.Drawables.WiSunset) as BitmapResource;
         _hourBitmapKey = "";
+        _layer = null;
+        _layerFailed = false;
     }
 
     //! Roboto Condensed Bold at a design-pixel size, or the given built-in font
@@ -195,19 +203,19 @@ class WatchFaceView extends WatchUi.WatchFace {
             refreshMinuteData();
             _lastMinute = clock.min;
             _last24Hour = is24Hour;
+            _layerValid = false;
         }
 
         if (_isAwake) {
-            if (_background != null) {
-                dc.drawBitmap(_cx - _background.getWidth() / 2, _cy - _background.getHeight() / 2, _background);
+            // Everything except the seconds changes at most once a minute, so it is
+            // drawn into an offscreen layer and only copied each second.
+            var layer = awakeLayer(clock);
+            if (layer != null) {
+                dc.drawBitmap(0, 0, layer);
+            } else {
+                drawAwakeStatic(dc, clock);
             }
-            drawBezel(dc, clock.sec);
-            for (var q = 0; q < 4; q++) {
-                drawGauge(dc, q);
-            }
-            drawWeather(dc);
-            drawSun(dc);
-            drawTexts(dc, clock, 0, 0);
+            drawSeconds(dc, clock);
         } else {
             // Always-on: date and both times only, shifted a few pixels each
             // minute to limit AMOLED burn-in.
@@ -221,6 +229,47 @@ class WatchFaceView extends WatchUi.WatchFace {
             dc.drawLine(0, _cy, _w, _cy);
             dc.drawLine(_cx, 0, _cx, _h);
         }
+    }
+
+    //! The awake view minus the seconds
+    private function drawAwakeStatic(dc as Dc, clock as System.ClockTime) as Void {
+        if (_background != null) {
+            dc.drawBitmap(_cx - _background.getWidth() / 2, _cy - _background.getHeight() / 2, _background);
+        }
+        drawBezel(dc);
+        for (var q = 0; q < 4; q++) {
+            drawGauge(dc, q);
+        }
+        drawWeather(dc);
+        drawSun(dc);
+        drawTexts(dc, clock, 0, 0);
+    }
+
+    //! The full-screen offscreen layer with the awake view minus the seconds,
+    //! redrawn when stale. Returns null if the graphics pool can't hold it
+    //! (about 412 KB at 454 px), in which case the face draws directly.
+    private function awakeLayer(clock as System.ClockTime) as BufferedBitmap? {
+        if (_layer == null && !_layerFailed) {
+            try {
+                _layer = Graphics.createBufferedBitmap({:width => _w, :height => _h}).get();
+            } catch (e) {
+                _layer = null;
+            }
+            _layerFailed = (_layer == null);
+            _layerValid = false;
+        }
+        var layer = _layer;
+        if (layer != null && !_layerValid) {
+            var ldc = layer.getDc();
+            ldc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
+            ldc.clear();
+            if (ldc has :setAntiAlias) {
+                ldc.setAntiAlias(true);
+            }
+            drawAwakeStatic(ldc, clock);
+            _layerValid = true;
+        }
+        return layer;
     }
 
     function onEnterSleep() as Void {
@@ -396,17 +445,11 @@ class WatchFaceView extends WatchUi.WatchFace {
             dc.drawText(hourRight + px(6), topAlignedY(hourY, _timeFont, _secFont), _secFont, suffix, flags);
         }
 
-        // Minute line, with seconds at the bottom right while awake
+        // Minute line (the seconds next to it are drawn separately, see drawSeconds)
         var minuteY = sy(MINUTE_Y) + dy;
         var minutes = clock.min.format("%02d");
         dc.setColor(_isAwake ? PRIMARY : AOD_TEXT, Graphics.COLOR_TRANSPARENT);
         dc.drawText(_cx + dx, minuteY, _timeFont, minutes, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-        if (_isAwake) {
-            var minuteRight = _cx + dx + dc.getTextWidthInPixels(minutes, _timeFont) / 2;
-            dc.setColor(DIM, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(minuteRight + px(6), bottomAlignedY(minuteY, _timeFont, _secFont), _secFont,
-                clock.sec.format("%02d"), flags);
-        }
 
         // Second time zone: digits centered; to their right the zone label sits on
         // the baseline, with AM/PM stacked above it (top-aligned with the digits)
@@ -535,7 +578,7 @@ class WatchFaceView extends WatchUi.WatchFace {
     }
 
     //! Minute and hour ticks, the 12 o'clock accent marker, and the seconds ring.
-    private function drawBezel(dc as Dc, sec as Number) as Void {
+    private function drawBezel(dc as Dc) as Void {
         for (var i = 0; i < 60; i++) {
             if (i == 0) {
                 continue;
@@ -549,16 +592,27 @@ class WatchFaceView extends WatchUi.WatchFace {
         dc.setColor(Settings.accentColor(_hourColor), Graphics.COLOR_TRANSPARENT);
         radialLine(dc, 0, HOUR_TICK_INNER - 2, TICK_OUTER + 2);
 
-        // Seconds ring: faint track, fill growing clockwise from 12 o'clock
-        var r = SECONDS_RADIUS * _s;
+        // Seconds ring track; the fill is drawn each second by drawSeconds
         dc.setPenWidth(px(SECONDS_STROKE));
         dc.setColor(SECONDS_TRACK, Graphics.COLOR_TRANSPARENT);
-        dc.drawCircle(_cx, _cy, r);
-        if (sec > 0) {
-            dc.setColor(DIM, Graphics.COLOR_TRANSPARENT);
-            dc.drawArc(_cx, _cy, r, Graphics.ARC_CLOCKWISE, 90, 90 - sec * 6);
-        }
+        dc.drawCircle(_cx, _cy, SECONDS_RADIUS * _s);
         dc.setPenWidth(1);
+    }
+
+    //! Seconds ring fill (clockwise from 12 o'clock) and the seconds digits at the
+    //! bottom right of the minutes. The only parts of the face that change every second.
+    private function drawSeconds(dc as Dc, clock as System.ClockTime) as Void {
+        if (clock.sec > 0) {
+            dc.setPenWidth(px(SECONDS_STROKE));
+            dc.setColor(DIM, Graphics.COLOR_TRANSPARENT);
+            dc.drawArc(_cx, _cy, SECONDS_RADIUS * _s, Graphics.ARC_CLOCKWISE, 90, 90 - clock.sec * 6);
+            dc.setPenWidth(1);
+        }
+        var minuteY = sy(MINUTE_Y);
+        var minuteRight = _cx + dc.getTextWidthInPixels(clock.min.format("%02d"), _timeFont) / 2;
+        dc.setColor(DIM, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(minuteRight + px(6), bottomAlignedY(minuteY, _timeFont, _secFont), _secFont,
+            clock.sec.format("%02d"), Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
     }
 
     //! Line along a radius; angle in degrees clockwise from 12 o'clock, radii in design px.
