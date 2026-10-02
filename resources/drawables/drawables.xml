@@ -1,8 +1,8 @@
 <drawables>
     <bitmap id="LauncherIcon" filename="launcher_icon.svg" scaleX="65" scaleY="65"/>
 
-    <!-- Topographic background, reduced to a few greys to save memory -->
-    <bitmap id="TopoBg" filename="topo_bg.png">
+    <!-- Topographic background, scaled to the screen size and reduced to a few greys to save memory -->
+    <bitmap id="TopoBg" filename="topo_bg.png" scaleX="100%" scaleY="100%" scaleRelativeTo="screen">
         <palette disableTransparency="true">
             <color>000000</color>
             <color>111315</color>

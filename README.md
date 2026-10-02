@@ -5,7 +5,7 @@ A dual time zone watch face for Garmin watches, built with the Connect IQ SDK.
 
 | Normal | Always-on |
 |:---:|:---:|
-| ![Zweizonen in normal mode](images/screenshot-normal.png) | ![Zweizonen in always-on mode](images/screenshot-aod.png) |
+| ![Zweizonen in normal mode](images/screenshot-normal.jpg) | ![Zweizonen in always-on mode](images/screenshot-aod.jpg) |
 
 ## Features
 
@@ -97,7 +97,24 @@ watch's `GARMIN/Apps` folder.
   minute into a full-screen offscreen layer. Each second then copies that layer and
   draws the seconds on top.
 - **Background**: `helpers/topo.py` generates the topographic background image.
-- **Design**: the original mockup is in `images/`.
+
+## Version history
+
+### 1.0.1
+
+- The topographic background now scales to every screen size. Previously it was
+  only resized on 416 px screens; on 360 and 390 px screens it was cropped, and on
+  466 px screens it stopped just short of the edge.
+
+### 1.0.0
+
+Initial release:
+- Stacked time with a gradient or solid-color hour.
+- Second time zone with DST-aware city list.
+- Four configurable ring gauges, weather and the next sunrise or sunset.
+- Seconds ring, topographic background, and always-on mode.
+- Settings available on the watch and in the Connect IQ app.
+- Supports 12 round AMOLED watches.
 
 ## License
 
