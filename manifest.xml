@@ -4,6 +4,16 @@
         <iq:products>
             <iq:product id="fenix843mm"/>
             <iq:product id="fenix8pro47mm"/>
+            <iq:product id="fenix947mm"/>
+            <iq:product id="fenix9pro47mm"/>
+            <iq:product id="fenix9pro51mm"/>
+            <iq:product id="fr265"/>
+            <iq:product id="fr265s"/>
+            <iq:product id="fr970"/>
+            <iq:product id="marq2aviator"/>
+            <iq:product id="venu441mm"/>
+            <iq:product id="venu445mm"/>
+            <iq:product id="vivoactive6"/>
         </iq:products>
         <iq:permissions>
             <iq:uses-permission id="ComplicationSubscriber"/>
